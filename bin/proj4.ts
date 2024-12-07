@@ -2,20 +2,29 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { Proj4Stack } from '../lib/proj4-stack';
+import { BucketStack } from '../lib/bucket-stack';
+import { DatabaseStack } from '../lib/database-stack';
+import { EventingStack } from '../lib/eventing-stack';
+import { LambdaStack } from '../lib/lambda-stack';
+import { MonitoringStack } from '../lib/monitoring-stack';
 
 const app = new cdk.App();
-new Proj4Stack(app, 'Proj4Stack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+const bucketStack = new BucketStack(app, 'BucketStack');
+const databaseStack = new DatabaseStack(app, 'DatabaseStack');
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+const eventingStack = new EventingStack(app, 'EventingStack', {
+  bucket: bucketStack.testBucket
+});
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const lambdaStack = new LambdaStack(app, 'LambdaStack', {
+  table: databaseStack.table,
+  bucket: bucketStack.testBucket,
+  sizeTrackingQueue: eventingStack.sizeTrackingQueue,
+  loggingQueue: eventingStack.loggingQueue
+});
+
+new MonitoringStack(app, 'MonitoringStack', {
+  loggingLambdaLogGroupName: lambdaStack.loggingLambdaLogGroupName,
+  cleanerLambda: lambdaStack.node.tryFindChild('CleanerLambda') as any // reference cleaner lambda from lambdaStack
 });

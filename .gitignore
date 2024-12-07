@@ -1,8 +1,19 @@
-*.js
-!jest.config.js
-*.d.ts
-node_modules
+# AWS CDK output files
+cdk.out/
+cdk.context.json
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# Node.js dependencies
+node_modules/
+
+# Python cache files
+__pycache__/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files (DO NOT COMMIT sensitive keys)
+.env
